@@ -1,0 +1,7 @@
+{
+    "min_ecut": 10,
+    "max_ecut": 45,
+    "interval": 5,
+    "kpts": [2, 2, 2],
+    "mode": "calc"
+}

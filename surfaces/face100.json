@@ -3,6 +3,7 @@
     "layers": 3,
     "vacuum" : 6.0,
     "kpts" : [6,4,1],
-    "ecut" : 29.4
+    "ecut" : 29.4,
+    "mode" : "calc"
 }
 

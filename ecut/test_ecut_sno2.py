@@ -2,6 +2,8 @@
 
 from __future__ import print_function
 
+import os, sys, json
+
 import numpy as np
 
 from ase.build import bulk, surface
@@ -11,10 +13,18 @@ from ase.visualize import view
 from ase.spacegroup import crystal 
 from espresso import Espresso
 
-minecut = 10
-maxecut = 45
-intecut = 5
-kpts = [2,2,2]
+infile = sys.argv[1]
+print(infile)
+with open(infile) as handle:
+    system = json.loads(handle.read())
+
+minecut = system['min_ecut']
+maxecut = system['max_ecut']
+intecut = system['interval']
+kpts = system['kpts']
+mode = system['mode']
+
+cwd = os.getcwd()
 
 def cassiterite(show=False):
     a = 4.7382
@@ -25,29 +35,35 @@ def cassiterite(show=False):
     return sno2
 
 
-ecut_dict = dict()
-for ecut in range(minecut,maxecut+intecut,intecut):
-    print('Working on...',ecut,' -> ', end=' ')
+if mode == "view":
     sno2 = cassiterite()
-    calc = Espresso(pw=ecut * Rydberg, calculation='scf', kpts=kpts,
-                    psppath="/home/ntm/projects/josh_kim/sno2/pseudo",
-                    convergence={'energy': 1e-6,
-                                 'maxsteps': 100, 'diag': 'cg'},
-                    outdir='sno2_test'
-                    )
-    sno2.set_calculator(calc)
-    calc.calculate(sno2)
-    ecut_dict[ecut] = sno2.get_potential_energy()
-    print('ECUT:', ecut, 'SnO2 PE:', sno2.get_potential_energy())
-    
+    view(sno2)
 
-for i, ecut  in enumerate(sorted(ecut_dict.keys())[1:]):
-    print( (ecut_dict[ecut] - ecut_dict[ecut-intecut]) / ecut_dict[ecut] )
-    
+elif mode == "calc":
+    ecut_dict = dict()
+    for ecut in range(minecut,maxecut+intecut,intecut):
+        print('Working on...',ecut,' -> ', end=' ')
+        sno2 = cassiterite()
+        calc = Espresso(pw=ecut * Rydberg, calculation='scf', kpts=kpts,
+                        psppath=cwd+"/../pseudo",
+                        convergence={'energy': 1e-6,
+                                     'maxsteps': 100, 'diag': 'cg'},
+                        outdir='sno2_test'
+                        )
+        sno2.set_calculator(calc)
+        calc.calculate(sno2)
+        ecut_dict[ecut] = sno2.get_potential_energy()
+        print('ECUT:', ecut, 'SnO2 PE:', sno2.get_potential_energy())
+        
+    emin = min(ecut_dict.itervalues())
+    for key in ecut_dict:
+        ecut_dict[key] -= emin
 
-import matplotlib.pyplot as plt
-x, y = zip( *sorted(ecut_dict.items()) )
-plt.plot(x,y,'-o')
-plt.show()
+    import matplotlib.pyplot as plt
+    x, y = zip( *sorted(ecut_dict.items()) )
+    plt.plot(x,y,'-o')
+    plt.xlabel(r'$E_{cut} (Ry) $')
+    plt.ylabel(r'$\Delta E (eV) $')
+    plt.show()
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import sys, json
+import os, sys, json
 
 import numpy as np
 
@@ -23,7 +23,9 @@ layers = system['layers']
 vacuum = system['vacuum']
 kpts = system['kpts']
 ecut = system['ecut']
+mode = system['mode']
 
+cwd = os.getcwd()
 
 def cassiterite(show=False):
     a = 4.7382
@@ -34,11 +36,11 @@ def cassiterite(show=False):
     return sno2
 
 
-def create_surface(sno2,face=(1,1,0),layers=3,vacuum=10.813,kpts=([6,3,1])):
-    sno2_surface = surface( sno2, face, layers)
-    sno2_surface.center(vacuum=vacuum, axis=2)
+def create_surface(atoms,face=(1,1,0),layers=3,vacuum=10.813,kpts=([6,3,1])):
+    mySurface = surface( atoms, face, layers)
+    mySurface.center(vacuum=vacuum, axis=2)
     kpts = np.asarray(kpts)
-    return sno2_surface
+    return mySurface
 
 
 sno2         = cassiterite()
@@ -51,13 +53,15 @@ sno2_surface = create_surface(sno2,
 calc = Espresso(pw=ecut * Rydberg, calculation='scf', kpts=kpts,
                 convergence={'energy': 1e-6,
                              'maxsteps': 100, 'diag': 'cg'},
-                psppath="/home/ntm/projects/josh_kim/sno2/pseudo",
+                psppath=cwd+"/../pseudo",
                 outdir='sno2_test'
                 )
 
-#view(sno2_surface)
 sno2_surface.set_calculator(calc)
 
-calc.calculate(sno2_surface)
-print('SnO2 PE:', sno2_surface.get_potential_energy())
+if mode == 'view':
+    view(sno2_surface)
+elif mode == 'calc':
+    calc.calculate(sno2_surface)
+    print('SnO2 PE:', sno2_surface.get_potential_energy())
 
