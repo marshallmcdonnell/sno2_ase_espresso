@@ -54,7 +54,7 @@ calc = Espresso(pw=ecut * Rydberg, calculation='scf', kpts=kpts,
                 convergence={'energy': 1e-6,
                              'maxsteps': 100, 'diag': 'cg'},
                 psppath=cwd+"/../pseudo",
-                outdir='sno2_test'
+                outdir='sno2_test', site='local')
                 )
 
 sno2_surface.set_calculator(calc)

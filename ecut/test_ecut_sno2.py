@@ -48,7 +48,8 @@ elif mode == "calc":
                         psppath=cwd+"/../pseudo",
                         convergence={'energy': 1e-6,
                                      'maxsteps': 100, 'diag': 'cg'},
-                        outdir='sno2_test'
+                        outdir='sno2_test',
+                        site='local'
                         )
         sno2.set_calculator(calc)
         calc.calculate(sno2)
