@@ -11,7 +11,7 @@ from ase.units import Rydberg, Bohr
 from ase.io import read
 from ase.visualize import view
 from ase.spacegroup import crystal 
-from espresso import Espresso
+from ase.calculators.espresso import Espresso
 
 infile = sys.argv[1]
 print(infile)
@@ -50,12 +50,33 @@ sno2_surface = create_surface(sno2,
                               vacuum=vacuum,
                               kpts=kpts)
 
-calc = Espresso(pw=ecut * Rydberg, calculation='scf', kpts=kpts,
-                convergence={'energy': 1e-6,
-                             'maxsteps': 100, 'diag': 'cg'},
-                psppath=cwd+"/../pseudo",
-                outdir='sno2_test'
+# Put together QE input dict
+input_dict = {
+    'control': {
+        'calculation': 'scf',
+        'etot_conv_thr': 1e-6,
+        'nstep': 100,
+        'outdir': 'sno2_test_face_{0}{1}{2}'.format(face[0], face[1], face[2]),
+    },
+    'system': {
+        'ecutwfc': ecut,
+    },
+    'electrons': {
+        'diagonalization': 'cg',
+    },
+}
+
+# Put together pseudopotential dict
+psp_dict = {'Sn': 'Sn.UPF',
+            'O': 'O.UPF',
+            }
+
+calc = Espresso(input_data=input_dict,
+                kpts=kpts,
+                pseudo_dir=cwd + "/../pseudo",
+                pseudopotentials=psp_dict,
                 )
+
 
 sno2_surface.set_calculator(calc)
 
